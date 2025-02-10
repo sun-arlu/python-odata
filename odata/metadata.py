@@ -276,7 +276,7 @@ class MetaData(object):
             response = self.connection._do_get(self.url)
             return ET.fromstring(response.content)
 
-    def _parse_action(self, xmlq, action_element, schema_name):
+    def _parse_action(self, xmlq, action_element, schema_name, schema_alias):
         action = {
             'name': action_element.attrib['Name'],
             'fully_qualified_name': action_element.attrib['Name'],
@@ -289,7 +289,7 @@ class MetaData(object):
 
         if action['is_bound']:
             # bound actions are named SchemaNamespace.ActionName
-            action['fully_qualified_name'] = '.'.join([schema_name, action['name']])
+            action['fully_qualified_name'] = '.'.join([schema_alias or schema_name, action['name']])
 
         for parameter_element in xmlq(action_element, 'edm:Parameter'):
             parameter_name = parameter_element.attrib['Name']
@@ -313,7 +313,7 @@ class MetaData(object):
                 action['return_type'] = type_name
         return action
 
-    def _parse_function(self, xmlq, function_element, schema_name):
+    def _parse_function(self, xmlq, function_element, schema_name, schema_alias):
         function = {
             'name': function_element.attrib['Name'],
             'fully_qualified_name': function_element.attrib['Name'],
@@ -327,7 +327,7 @@ class MetaData(object):
         if function['is_bound']:
             # bound functions are named SchemaNamespace.FunctionName
             function['fully_qualified_name'] = '.'.join(
-                [schema_name, function['name']])
+                [schema_alias or schema_name, function['name']])
 
         for parameter_element in xmlq(function_element, 'edm:Parameter'):
             parameter_name = parameter_element.attrib['Name']
@@ -503,11 +503,11 @@ class MetaData(object):
                 container_sets[set_name] = set_dict
 
             for action_def in xmlq(schema, 'edm:Action'):
-                action = self._parse_action(xmlq, action_def, schema_name)
+                action = self._parse_action(xmlq, action_def, schema_name, schema_alias)
                 actions.append(action)
 
             for function_def in xmlq(schema, 'edm:Function'):
-                function = self._parse_function(xmlq, function_def, schema_name)
+                function = self._parse_function(xmlq, function_def, schema_name, schema_alias)
                 functions.append(function)
 
         return schemas, container_sets, actions, functions
