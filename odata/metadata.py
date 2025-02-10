@@ -293,7 +293,7 @@ class MetaData(object):
 
         for parameter_element in xmlq(action_element, 'edm:Parameter'):
             parameter_name = parameter_element.attrib['Name']
-            if action['is_bound'] and parameter_name == 'bindingParameter':
+            if action['is_bound'] and action['is_bound_to'] is None:
                 action['is_bound_to'] = parameter_element.attrib['Type']
                 continue
 
@@ -331,7 +331,7 @@ class MetaData(object):
 
         for parameter_element in xmlq(function_element, 'edm:Parameter'):
             parameter_name = parameter_element.attrib['Name']
-            if function['is_bound'] and parameter_name == 'bindingParameter':
+            if function['is_bound'] and function['is_bound_to'] is None:
                 function['is_bound_to'] = parameter_element.attrib['Type']
                 continue
 
