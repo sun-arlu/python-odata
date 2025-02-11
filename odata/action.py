@@ -226,12 +226,11 @@ class ActionBase(object):
         return connection
 
     def _check_call_arguments(self, kwargs):
-        incorrect_keys = set(kwargs.keys()) != set(self.parameters.keys())
-        if incorrect_keys:
-            received_keys = ','.join(kwargs.keys())
-            expected_keys = ','.join(self.parameters.keys())
-            errmsg = 'Received keyword arguments: \'{}\', required: \'{}\''
-            errmsg = errmsg.format(received_keys, expected_keys)
+        got_keys = frozenset(kwargs.keys())
+        expected_keys = frozenset(self.parameters.keys())
+        if not (got_keys <= expected_keys):
+            errmsg = 'Received invalid keyword arguments: {}'
+            errmsg = errmsg.format(", ".join(got_keys - expected_keys))
             raise TypeError(errmsg)
 
     def _callable(self, connection, url, query, **kwargs):
