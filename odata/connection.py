@@ -10,6 +10,7 @@ from urllib.parse import urlencode, quote
 
 from odata import version
 from .exceptions import ODataError, ODataConnectionError
+from .json import DecimalJSONEncoder
 
 
 def catch_requests_errors(fn):
@@ -168,7 +169,7 @@ class ODataConnection(object):
             headers.update(extra_headers)
 
         if not raw:
-            data = json.dumps(data)
+            data = json.dumps(data, cls=DecimalJSONEncoder)
 
         self.log.info(u'POST {0}'.format(url))
         self.log.info(u'Payload: {0}'.format(data))
@@ -191,7 +192,7 @@ class ODataConnection(object):
         if extra_headers:
             headers.update(extra_headers)
 
-        data = json.dumps(data)
+        data = json.dumps(data, cls=DecimalJSONEncoder)
 
         self.log.info(u'PATCH {0}'.format(url))
         self.log.info(u'Payload: {0}'.format(data))
