@@ -159,6 +159,76 @@ class MetaData(object):
                 depth += 1
                 self._create_entities(all_types, entity_base_class, schemas, depth)
 
+    def _create_complex_types(self, all_types, complex_type_base_class, schemas, depth=1):
+        orphan_complex_types = []
+        with rich.progress.Progress(transient=True, console=self.console, disable=self.quiet) as progress:
+            schema_task = progress.add_task("Schemas", total=len(schemas))
+            for schema in schemas:
+                complex_type_task = progress.add_task(f"Creating complex types for {schema['name']}", total=len(schema.get("complex_types")))
+                for complex_type_dict in schema.get('complex_types'):
+                    progress.update(complex_type_task, advance=1)
+                    complex_type_id = complex_type_dict['type']
+                    complex_type_alias = complex_type_dict.get('type_alias')
+                    complex_type_name = complex_type_dict['name']
+
+                    if complex_type_id in all_types:
+                        continue
+
+                    parent_complex_type_class = None
+
+                    if complex_type_dict.get('base_type'):
+                        base_type = complex_type_dict.get('base_type')
+                        parent_complex_type_class = all_types.get(base_type)
+
+                        if parent_complex_type_class is None:
+                            # base class not yet created
+                            orphan_complex_types.append(complex_type_id)
+                            continue
+
+                    super_class = parent_complex_type_class or complex_type_base_class
+                    object_dict = dict(
+                        __odata_schema__=complex_type_dict,
+                        __odata_type__=complex_type_id,
+                    )
+                    complex_type_class = type(complex_type_name, (super_class,), object_dict)
+
+                    all_types[complex_type_id] = complex_type_class
+                    if complex_type_alias:
+                        all_types[complex_type_alias] = complex_type_class
+
+                    for prop in complex_type_dict.get('properties'):
+                        prop_name = prop['name']
+
+                        if hasattr(complex_type_class, prop_name):
+                            # do not replace existing properties (from Base)
+                            continue
+
+                        property_type = all_types.get(prop['type'])
+
+                        if property_type and issubclass(property_type, EnumType):
+                            property_instance = EnumTypeProperty(prop_name, enum_class=property_type)
+                            property_instance.is_computed_value = prop['is_computed_value']
+                        else:
+                            type_ = self.property_type_to_python(prop['type'])
+                            type_options = {
+                                'primary_key': prop['is_primary_key'],
+                                'is_collection': prop['is_collection'],
+                                'is_computed_value': prop['is_computed_value'],
+                            }
+                            property_instance = type_(prop_name, **type_options)
+                        setattr(complex_type_class, prop_name, property_instance)
+
+                progress.remove_task(complex_type_task)
+                progress.update(schema_task, advance=1)
+
+            if len(orphan_complex_types) > 0:
+                if depth > 10:
+                    errmsg = ('Types could not be resolved. '
+                              'Orphaned types: {0}').format(', '.join(orphan_complex_types))
+                    raise ODataReflectionError(errmsg)
+                depth += 1
+                self._create_complex_types(all_types, complex_type_base_class, schemas, depth)
+
     def _create_actions(self, all_types, actions, get_entity_or_prop_from_type):
         entities = self._get_entities_from_types(all_types)
         for action in rich.progress.track(actions, "Creating actions", console=self.console, transient=True, disable=self.quiet):
@@ -254,6 +324,7 @@ class MetaData(object):
                 progress.update(schema_task, advance=1)
 
         self._create_entities(all_types, base_class, schemas)
+        self._create_complex_types(all_types, base_class, schemas)
 
         sets = {}
         for entity_set in rich.progress.track(entity_sets.values(), "Processing entity types ...", console=self.console, transient=True, disable=self.quiet):
@@ -462,6 +533,10 @@ class MetaData(object):
             for entity_type in xmlq(schema, 'edm:EntityType'):
                 entity = self._parse_entity(xmlq, entity_type, schema_name, schema_alias)
                 schema_dict['entities'].append(entity)
+
+            for complex_type in xmlq(schema, 'edm:ComplexType'):
+                complex = self._parse_entity(xmlq, complex_type, schema_name, schema_alias)
+                schema_dict['complex_types'].append(complex)
 
             schemas.append(schema_dict)
 
