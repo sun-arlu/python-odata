@@ -245,7 +245,7 @@ class ActionBase(object):
             query_options = query._get_options()
 
         response_data = self._execute_http(connection, url, query_options, kwargs)
-        response_data = (response_data or {}).get('value')
+        response_data = response_data or {}
 
         simple_types_values = self.__odata_service__.metadata.property_types.values()
 
