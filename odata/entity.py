@@ -126,7 +126,7 @@ class EntityBase(object):
                     else:
                         es.nav_cache[prop.name] = dict(single=prop.instances_from_data(expanded_data, es.connection, f"{base_url}/{prop.name}"))
 
-            i.__odata__.persisted = True
+            i.__odata__.etag = raw_data.get("@odata.etag")
         else:
             for prop_name, prop in es.properties:
                 i.__odata__[prop.name] = None

@@ -4,8 +4,9 @@ import logging
 
 from odata.query import Query
 from odata.connection import ODataConnection
-from odata.exceptions import ODataError
+from odata.exceptions import ODataError, ODataConnectionError
 from odata.flags import ODataServerFlags
+from odata.state import ETagUnsupported
 
 
 class Context:
@@ -44,11 +45,18 @@ class Context:
 
         :type entity: EntityBase
         :raises ODataConnectionError: Delete not allowed or a serverside error. Server returned an HTTP error code
+        :raises ODataError: Entity is not presisted
         """
+        if not entity.__odata__.persisted:
+            raise ODataError('Cannot delete non-persisted entity')
+
         self.log.info(u'Deleting entity: {0}'.format(entity))
         url = entity.__odata__.instance_url
-        self.connection.execute_delete(url)
-        entity.__odata__.persisted = False
+        extra_headers = {}
+        if entity.__odata__.etag is not None and entity.__odata__.etag is not ETagUnsupported:
+            extra_headers["If-Match"] = entity.__odata__.etag
+        self.connection.execute_delete(url, extra_headers)
+        entity.__odata__.etag = None
         self.log.info(u'Success')
 
     def save(self, entity, force_refresh=True, extra_headers=None):
@@ -90,7 +98,6 @@ class Context:
         saved_data = self.connection.execute_post(url, insert_data)
         es.reset()
         es.connection = self.connection
-        es.persisted = True
 
         if saved_data is not None:
             es.update(saved_data)
@@ -107,6 +114,8 @@ class Context:
         if es.instance_url is None:
             msg = 'Cannot update Entity that does not belong to EntitySet: {0}'.format(entity)
             raise ODataError(msg)
+        if not es.persisted:
+            raise ODataError('Cannot update non-persisted entity')
 
         patch_data = es.data_for_update(self.server_flags)
 
@@ -118,6 +127,8 @@ class Context:
 
         url = es.instance_url
 
+        if es.etag is not None and es.etag is not ETagUnsupported:
+            extra_headers["If-Match"] = es.etag
         saved_data = self.connection.execute_patch(url, patch_data, extra_headers=extra_headers)
         es.reset()
 

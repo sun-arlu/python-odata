@@ -15,6 +15,10 @@ from odata.flags import ODataServerFlags
 from odata.property import PropertyBase, NavigationProperty
 
 
+ETagUnsupported = object()
+"""Use if the API response does not contain ETags."""
+
+
 class EntityState(object):
 
     def __init__(self, entity):
@@ -23,10 +27,13 @@ class EntityState(object):
         self.dirty = []
         self.nav_cache = {}
         self.data = {}
+        self.etag = None
         self.connection = None
-        # does this object exist serverside
-        self.persisted = False
         self.parent_navigation_url: Optional[str] = None  # for chaining objects, like OrderDetails.Order.Employee
+
+    @property
+    def persisted(self):
+        return self.etag is not None
 
     # dictionary access
     def __getitem__(self, item):
@@ -43,6 +50,7 @@ class EntityState(object):
 
     def update(self, other):
         self.data.update(other)
+        self.etag = other.get("@odata.etag")
     # /dictionary access
 
     def __repr__(self):
@@ -184,7 +192,7 @@ class EntityState(object):
             if prop.name in self.dirty:
                 rv.append((prop_name, prop))
         return rv
-    
+
     def _format_odata_bind_key(self, prop_name, require_slash: bool = False):
         key = '{0}@odata.bind'.format(prop_name)
         key = f'/{key}' if require_slash else key

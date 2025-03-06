@@ -38,7 +38,7 @@ class TestMetadataImport(TestCase):
 
         test_product = Product()
         # shortcut for saving the entity
-        test_product.__odata__.persisted = True
+        test_product.__odata__.etag = "__dummy_etag__"
         assert hasattr(test_product, 'DemoActionWithParameters')
         assert hasattr(ProductWithNavigation, 'Manufacturer')
         self.assertIn('Manufacturers', Service.entities)

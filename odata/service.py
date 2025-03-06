@@ -245,6 +245,7 @@ class ODataService(object):
 
         :type entity: EntityBase
         :raises ODataConnectionError: Delete not allowed or a serverside error. Server returned an HTTP error code
+        :raises ODataError: Entity is not presisted
         """
         return self.default_context.delete(entity)
 

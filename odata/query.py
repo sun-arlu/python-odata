@@ -62,6 +62,7 @@ except ImportError:
     from urlparse import urljoin
 
 import odata.exceptions as exc
+from odata.state import ETagUnsupported
 
 
 Q = TypeVar('Q')
@@ -87,7 +88,7 @@ class Query(Generic[Q]):
             if 'value' in data:
                 value = data.get('value', [])
                 for row in value:
-                    yield self._create_model(row)
+                    yield self._create_model(self._prepare_raw_data(row))
 
                 if '@odata.nextLink' in data and '$top' not in options.keys():  # do not load next page on userpaging:
                     url = urljoin(self.entity.__odata_url_base__, data['@odata.nextLink'])
@@ -95,10 +96,15 @@ class Query(Generic[Q]):
                 else:
                     break
             elif self.entity.__odata_singleton__:
-                yield self._create_model(data)
+                yield self._create_model(self._prepare_raw_data(data))
                 break
             else:
                 break
+
+    def _prepare_raw_data(self, data: dict) -> dict:
+        if "@odata.etag" not in data:
+            data["@odata.etag"] = ETagUnsupported
+        return data
 
     def __repr__(self):
         return '<Query for {0}>'.format(self.entity)
@@ -267,7 +273,7 @@ class Query(Generic[Q]):
         q = self._new_query()
         q.options['$skip'] = value
         return q
-    
+
     def apply(self, value) -> "Query[Q]":
         """
         Set ``$apply`` query parameter

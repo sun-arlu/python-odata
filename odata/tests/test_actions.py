@@ -27,7 +27,7 @@ class TestActions(unittest.TestCase):
         test_product.price = decimal.Decimal('20.0')
 
         # shortcut for saving the entity
-        test_product.__odata__.persisted = True
+        test_product.__odata__.etag = "__dummy_etag__"
 
         with responses.RequestsMock() as rsps:
             rsps.add(
