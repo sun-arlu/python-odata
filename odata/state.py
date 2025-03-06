@@ -135,14 +135,15 @@ class EntityState(object):
 
     @property
     def id(self):
+        __missing__ = object()
         ids = []
         entity_name = self.entity.__odata_collection__
         if entity_name is None:
             return
 
         for prop_name, prop in self.primary_key_properties:
-            value = self.data.get(prop.name)
-            if value:
+            value = self.data.get(prop.name, __missing__)
+            if value is not __missing__:
                 ids.append((prop, str(prop.escape_value(value))))
         if len(ids) == 1:
             key_value = ids[0][1]
