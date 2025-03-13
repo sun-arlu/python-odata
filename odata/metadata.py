@@ -147,6 +147,7 @@ class MetaData(object):
                             }
                             property_instance = type_(prop_name, **type_options)
                         setattr(entity_class, prop_name, property_instance)
+                        entity_class.__odata_props__ = (*entity_class.__odata_props__, (prop_name, property_instance))
 
                 progress.remove_task(entity_task)
                 progress.update(schema_task, advance=1)
@@ -217,6 +218,7 @@ class MetaData(object):
                             }
                             property_instance = type_(prop_name, **type_options)
                         setattr(complex_type_class, prop_name, property_instance)
+                        complex_type_class.__odata_props__ = (*complex_type_class.__odata_props__, (prop_name, property_instance))
 
                 progress.remove_task(complex_type_task)
                 progress.update(schema_task, advance=1)

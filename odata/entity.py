@@ -76,6 +76,7 @@ use the Product class to create new objects or query existing ones:
         print(product.name, product.is_product_available())
 """
 from odata.exceptions import ODataConnectionError
+from odata.property import PropertyBase
 
 try:
     # noinspection PyUnresolvedReferences
@@ -93,6 +94,8 @@ class EntityBase(object):
     __odata_type__ = 'ODataSchema.Entity'
     __odata_singleton__ = False
     __odata_schema__ = None
+    __odata_props__: tuple[tuple[str, PropertyBase]] = ()
+    """Properties in order of definition."""
 
     @classmethod
     def __odata_url__(cls):

@@ -164,7 +164,7 @@ class EntityState(object):
     def properties(self):
         props = []
         cls = self.entity.__class__
-        for key, value in inspect.getmembers(cls):
+        for key, value in cls.__odata_props__:
             if isinstance(value, PropertyBase):
                 props.append((key, value))
         return props
