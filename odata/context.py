@@ -127,6 +127,7 @@ class Context:
 
         url = es.instance_url
 
+        extra_headers = extra_headers or {}
         if es.etag is not None and es.etag is not ETagUnsupported:
             extra_headers["If-Match"] = es.etag
         saved_data = self.connection.execute_patch(url, patch_data, extra_headers=extra_headers)
