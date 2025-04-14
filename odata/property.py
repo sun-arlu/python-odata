@@ -128,8 +128,18 @@ class PropertyBase(object):
     :param name: Name of the property in the endpoint
     :param primary_key: This property is a primary key
     :param is_collection: This property contains multiple values
+    :param nullable: This property is nullable
+    :param max_length: Maximum length of the property
     """
-    def __init__(self, name, primary_key=False, is_collection=False, is_computed_value=False):
+    def __init__(
+        self,
+        name,
+        primary_key=False,
+        is_collection=False,
+        is_computed_value=False,
+        nullable: bool = True,
+        max_length: str | int | None = None,
+    ):
         """
         :type name: str
         :type primary_key: bool
@@ -138,6 +148,8 @@ class PropertyBase(object):
         self.primary_key = primary_key
         self.is_collection = is_collection
         self.is_computed_value = is_computed_value
+        self.nullable = nullable
+        self.max_length = int(max_length) if max_length is not None else max_length
 
     def __repr__(self):
         return '<Property({0})>'.format(self.name)

@@ -45,6 +45,32 @@ class TestMetadataImport(TestCase):
 
         self.assertIn('DemoUnboundAction', Service.actions)
 
+        self.assertTrue(
+            getattr(Product, "Price").nullable,
+            '"Nullable = "true" should be True"'
+            )
+        self.assertFalse(
+            getattr(Product, "ProductID").nullable,
+            '"Nullable = "false" should be False"'
+            )
+        self.assertTrue(
+            getattr(Product, "Name").nullable,
+            "Unset 'Nullable' attribute should default to True"
+            )
+
+        self.assertIsInstance(
+            getattr(Product, "Category").max_length, int, 
+            'MaxLength = "string" should be converted to int.'
+        )
+        self.assertEqual(
+            getattr(Product, "Category").max_length, 40, 
+            'MaxLength = "40" should be 40.'
+        )
+        self.assertIsNone(
+            getattr(Product, "Name").max_length,
+            "Unset 'MaxLength' attribute should default to None"
+        )
+
     def test_computed_value_in_insert(self):
         with responses.RequestsMock() as rsps:
             rsps.add(rsps.GET, 'http://demo.local/odata/$metadata',

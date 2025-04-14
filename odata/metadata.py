@@ -138,12 +138,15 @@ class MetaData(object):
                         if property_type and issubclass(property_type, EnumType):
                             property_instance = EnumTypeProperty(prop_name, enum_class=property_type)
                             property_instance.is_computed_value = prop['is_computed_value']
+                            property_instance.nullable = prop['nullable']
                         else:
                             type_ = self.property_type_to_python(prop['type'])
                             type_options = {
                                 'primary_key': prop['is_primary_key'],
                                 'is_collection': prop['is_collection'],
                                 'is_computed_value': prop['is_computed_value'],
+                                'nullable': prop['nullable'],
+                                'max_length': prop['max_length'],
                             }
                             property_instance = type_(prop_name, **type_options)
                         setattr(entity_class, prop_name, property_instance)
@@ -209,12 +212,15 @@ class MetaData(object):
                         if property_type and issubclass(property_type, EnumType):
                             property_instance = EnumTypeProperty(prop_name, enum_class=property_type)
                             property_instance.is_computed_value = prop['is_computed_value']
+                            property_instance.nullable = prop['nullable']
                         else:
                             type_ = self.property_type_to_python(prop['type'])
                             type_options = {
                                 'primary_key': prop['is_primary_key'],
                                 'is_collection': prop['is_collection'],
                                 'is_computed_value': prop['is_computed_value'],
+                                'nullable': prop['nullable'],
+                                'max_length': prop['max_length'],
                             }
                             property_instance = type_(prop_name, **type_options)
                         setattr(complex_type_class, prop_name, property_instance)
@@ -468,6 +474,8 @@ class MetaData(object):
                 'is_primary_key': p_name in entity_pks,
                 'is_collection': is_collection,
                 'is_computed_value': is_computed_value,
+                'nullable': not entity_property.attrib.get('Nullable') == 'false',
+                'max_length': entity_property.attrib.get('MaxLength'),
             })
 
         for nav_property in xmlq(entity_element, 'edm:NavigationProperty'):

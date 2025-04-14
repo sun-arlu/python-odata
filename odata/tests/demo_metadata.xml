@@ -12,8 +12,8 @@
                 </Key>
                 <Property Name="ProductID" Type="Edm.Int32" Nullable="false"/>
                 <Property Name="Name" Type="Edm.String"/>
-                <Property Name="Category" Type="Edm.String"/>
-                <Property Name="Price" Type="Edm.Decimal"/>
+                <Property Name="Category" Type="Edm.String" MaxLength="40"/>
+                <Property Name="Price" Type="Edm.Decimal" Nullable="true"/>
                 <Property Name="ColorSelection" Type="d.ColorSelection"/>
                 <Property Name="ExampleComputed" Type="Edm.Int32">
                     <Annotation Term="Org.OData.Core.V1.Computed" Bool="true" />
