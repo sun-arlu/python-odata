@@ -1,5 +1,4 @@
-"""Implementation of JSONEncoder
-"""
+"""Implementation of JSONEncoder"""
 
 from decimal import Decimal
 from json import JSONEncoder
@@ -20,23 +19,23 @@ class DecimalJSONEncoder(JSONEncoder):
 
     Supports the following objects and types by default:
 
-    +-------------------+---------------+
-    | Python            | JSON          |
-    +===================+===============+
-    | dict              | object        |
-    +-------------------+---------------+
-    | list, tuple       | array         |
-    +-------------------+---------------+
-    | str               | string        |
-    +-------------------+---------------+
-    | int, float        | number        |
-    +-------------------+---------------+
-    | True              | true          |
-    +-------------------+---------------+
-    | False             | false         |
-    +-------------------+---------------+
-    | None              | null          |
-    +-------------------+---------------+
+    +---------------------+---------------+
+    | Python              | JSON          |
+    +=====================+===============+
+    | dict                | object        |
+    +---------------------+---------------+
+    | list, tuple         | array         |
+    +---------------------+---------------+
+    | str                 | string        |
+    +---------------------+---------------+
+    | int, float, Decimal | number        |
+    +---------------------+---------------+
+    | True                | true          |
+    +---------------------+---------------+
+    | False               | false         |
+    +---------------------+---------------+
+    | None                | null          |
+    +---------------------+---------------+
 
     To extend this to recognize other objects, subclass and implement a
     ``.default()`` method with another method that returns a serializable
@@ -187,7 +186,7 @@ def _make_iterencode(
             elif value is False:
                 yield buf + "false"
             elif isinstance(value, int):
-                # Subclasses of int/float may override __repr__, but we still
+                # Subclasses of int/float/Decimal may override __repr__, but we still
                 # want to encode them as integers/floats in JSON. One example
                 # within the standard library is IntEnum.
                 yield buf + _intstr(value)
@@ -242,8 +241,11 @@ def _make_iterencode(
             # JavaScript is weakly typed for these, so it makes sense to
             # also allow them.  Many encoders seem to do something like this.
             elif isinstance(key, float):
-                # see comment for int/float in _make_iterencode
+                # see comment for int in _iterencode_list
                 key = _floatstr(key)
+            elif isinstance(key, Decimal):
+                # see comment for int in _iterencode_list
+                key = _decimalstr(key)
             elif key is True:
                 key = "true"
             elif key is False:
@@ -251,7 +253,7 @@ def _make_iterencode(
             elif key is None:
                 key = "null"
             elif isinstance(key, int):
-                # see comment for int/float in _make_iterencode
+                # see comment for int in _make_iterencode
                 key = _intstr(key)
             elif _skipkeys:
                 continue
@@ -275,11 +277,14 @@ def _make_iterencode(
             elif value is False:
                 yield "false"
             elif isinstance(value, int):
-                # see comment for int/float in _make_iterencode
+                # see comment for int in _iterencode_list
                 yield _intstr(value)
             elif isinstance(value, float):
-                # see comment for int/float in _make_iterencode
+                # see comment for int in _iterencode_list
                 yield _floatstr(value)
+            elif isinstance(value, Decimal):
+                # see comment for int in _iterencode_list
+                yield _decimalstr(value)
             else:
                 if isinstance(value, (list, tuple)):
                     chunks = _iterencode_list(value, _current_indent_level)
@@ -305,13 +310,13 @@ def _make_iterencode(
         elif o is False:
             yield "false"
         elif isinstance(o, int):
-            # see comment for int/float in _make_iterencode
+            # see comment for int in _iterencode_list
             yield _intstr(o)
         elif isinstance(o, float):
-            # see comment for int/float in _make_iterencode
+            # see comment for int in _iterencode_list
             yield _floatstr(o)
         elif isinstance(o, Decimal):
-            # see comment for int/float in _make_iterencode
+            # see comment for int in _iterencode_list
             yield _decimalstr(o)
         elif isinstance(o, (list, tuple)):
             yield from _iterencode_list(o, _current_indent_level)
